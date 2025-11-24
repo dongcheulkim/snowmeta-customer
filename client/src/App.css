@@ -1,0 +1,44 @@
+/* Custom styles for SnowMeta Ski Shop Theme */
+/* All styling is now handled by Tailwind CSS */
+
+/* Mobile & Tablet Responsive */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Any custom components or utilities can be added here */
+.ski-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #000000 100%);
+}
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  input, select, textarea, button {
+    font-size: 16px !important; /* Prevents zoom on focus in iOS */
+  }
+}

@@ -1,0 +1,17 @@
+const express = require('express');
+const router = express.Router();
+const customerController = require('../controllers/customerController');
+const { authenticateToken } = require('../middleware/auth');
+
+// 모든 고객 관리 API는 인증 필요
+router.get('/', authenticateToken, customerController.getAllCustomers);
+
+router.get('/:id', authenticateToken, customerController.getCustomerById);
+
+router.post('/', authenticateToken, customerController.createCustomer);
+
+router.put('/:id', authenticateToken, customerController.updateCustomer);
+
+router.delete('/:id', authenticateToken, customerController.deleteCustomer);
+
+module.exports = router;

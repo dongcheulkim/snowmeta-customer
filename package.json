@@ -1,0 +1,23 @@
+{
+  "name": "snowmeta-customer-management",
+  "version": "1.0.0",
+  "description": "스노우메타 고객관리 웹 프로젝트",
+  "main": "server/server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && nodemon server.js",
+    "client": "cd client && npm start",
+    "build": "cd client && npm install && npm run build",
+    "vercel-build": "cd client && npm install && npm run build",
+    "install-deps": "cd server && npm install && cd ../client && npm install"
+  },
+  "dependencies": {
+    "concurrently": "^7.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["react", "nodejs", "express", "postgresql", "customer-management"],
+  "author": "SnowMeta",
+  "license": "MIT"
+}
