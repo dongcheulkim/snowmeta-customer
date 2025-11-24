@@ -51,7 +51,11 @@
       "Bash(del \"c:\\Users\\스노우메타\\Desktop\\snowmeta customer wep\\server\\models\\Customer.js\")",
       "Bash(del \"c:\\Users\\스노우메타\\Desktop\\snowmeta customer wep\\server\\models\\GeneralService.js\")",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
