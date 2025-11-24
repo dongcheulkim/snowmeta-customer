@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCoupons, createCoupon, issueCoupon, useCoupon, updateCoupon, deleteCoupon } from '../services/couponService';
+import { getCoupons, createCoupon, issueCoupon, useCoupon as applyCoupon, updateCoupon, deleteCoupon } from '../services/couponService';
 
 const CouponManagement = ({ userInfo }) => {
   const [coupons, setCoupons] = useState([]);
@@ -67,7 +67,7 @@ const CouponManagement = ({ userInfo }) => {
     if (!selectedCoupon) return;
 
     try {
-      await useCoupon(selectedCoupon.id, {
+      await applyCoupon(selectedCoupon.id, {
         ...useCouponData,
         branch: userInfo?.branchName || '관리자'
       });
