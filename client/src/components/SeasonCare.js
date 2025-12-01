@@ -169,14 +169,6 @@ const SeasonCare = ({ userInfo }) => {
       // 데이터 가공
       let submitData = { ...formData };
 
-      // items 배열을 service_description으로 변환 (항상 실행)
-      if (submitData.items && submitData.items.length > 0) {
-        submitData.service_description = submitData.items
-          .map(item => item.equipment_name)
-          .filter(name => name)
-          .join(', ');
-      }
-
       // 서비스 추가 시 날짜 처리
       if (isAddingService) {
         // 날짜가 없으면 오늘 날짜로 설정
@@ -185,41 +177,63 @@ const SeasonCare = ({ userInfo }) => {
         }
       }
 
-      // Supabase 테이블 스키마에 맞는 필드만 전송
-      const cleanData = {
-        customer_name: submitData.customer_name,
-        customer_phone: submitData.customer_phone,
-        customer_memo: submitData.customer_memo || null,
-        service_date: submitData.service_date,
-        service_description: submitData.service_description || null,
-        total_cost: submitData.total_cost || null,
-        payment_status: submitData.payment_status || 'unpaid',
-        branch: userInfo?.isAdmin ? (submitData.branch || userInfo?.branchName) : userInfo?.branchName,
-        notes: submitData.notes || null,
-        season_count: submitData.season_count || null,
-        payment_location: userInfo?.isAdmin ? (submitData.payment_location || userInfo?.branchName) : userInfo?.branchName,
-        contract_number: submitData.contract_number || undefined
-      };
-
       console.log('=== 시즌케어 등록/수정 ===');
       console.log('isAddingService:', isAddingService);
       console.log('selectedItem:', selectedItem);
       console.log('submitData.contract_number:', submitData.contract_number);
-      console.log('cleanData:', cleanData);
 
       if (selectedItem) {
+        // 수정 모드: 기존처럼 하나의 레코드만 업데이트
+        // items 배열을 service_description으로 변환
+        if (submitData.items && submitData.items.length > 0) {
+          submitData.service_description = submitData.items
+            .map(item => item.equipment_name)
+            .filter(name => name)
+            .join(', ');
+        }
+
+        const cleanData = {
+          customer_name: submitData.customer_name,
+          customer_phone: submitData.customer_phone,
+          customer_memo: submitData.customer_memo || null,
+          service_date: submitData.service_date,
+          service_description: submitData.service_description || null,
+          total_cost: submitData.total_cost || null,
+          payment_status: submitData.payment_status || 'unpaid',
+          branch: userInfo?.isAdmin ? (submitData.branch || userInfo?.branchName) : userInfo?.branchName,
+          notes: submitData.notes || null,
+          season_count: submitData.season_count || null,
+          payment_location: userInfo?.isAdmin ? (submitData.payment_location || userInfo?.branchName) : userInfo?.branchName,
+          contract_number: submitData.contract_number || undefined
+        };
+
         console.log('UPDATE 실행');
+        console.log('cleanData:', cleanData);
         await updateSeasonCare(selectedItem.id, cleanData);
       } else {
+        // 신규 등록 모드: 각 정비내역을 개별 레코드로 생성
         console.log('CREATE 실행');
 
+        // items 배열에서 빈 값 제거
+        const validItems = (submitData.items || [])
+          .map(item => item.equipment_name)
+          .filter(name => name && name.trim());
+
+        if (validItems.length === 0) {
+          alert('최소 1개의 정비내역을 입력해주세요.');
+          setIsSubmitting(false);
+          return;
+        }
+
         // 계약 번호 결정
-        if (!cleanData.contract_number) {
+        let contractNumber = submitData.contract_number;
+
+        if (!contractNumber) {
           // "새 시즌케어"로 등록 - 최신 계약 번호 + 1
           const { data: existingContracts } = await supabase
             .from('season_care')
             .select('contract_number')
-            .eq('customer_phone', cleanData.customer_phone)
+            .eq('customer_phone', submitData.customer_phone)
             .order('contract_number', { ascending: false })
             .limit(1);
 
@@ -227,8 +241,8 @@ const SeasonCare = ({ userInfo }) => {
             ? existingContracts[0].contract_number
             : 0;
 
-          cleanData.contract_number = latestContractNumber + 1;
-          console.log('새 계약 번호:', cleanData.contract_number);
+          contractNumber = latestContractNumber + 1;
+          console.log('새 계약 번호:', contractNumber);
         } else {
           // "서비스 추가"로 등록 - 기존 계약의 시즌케어 정보 복사
           console.log('기존 계약에 서비스 추가 - 시즌케어 정보 복사');
@@ -236,21 +250,40 @@ const SeasonCare = ({ userInfo }) => {
           const { data: existingServices } = await supabase
             .from('season_care')
             .select('season_count, total_cost, payment_location')
-            .eq('customer_phone', cleanData.customer_phone)
-            .eq('contract_number', cleanData.contract_number)
+            .eq('customer_phone', submitData.customer_phone)
+            .eq('contract_number', contractNumber)
             .not('season_count', 'is', null)
             .limit(1);
 
           if (existingServices && existingServices.length > 0) {
             const existingService = existingServices[0];
-            cleanData.season_count = existingService.season_count;
-            cleanData.total_cost = existingService.total_cost;
-            cleanData.payment_location = existingService.payment_location;
-            console.log('시즌케어 정보 복사:', cleanData.season_count, cleanData.total_cost, cleanData.payment_location);
+            submitData.season_count = existingService.season_count;
+            submitData.total_cost = existingService.total_cost;
+            submitData.payment_location = existingService.payment_location;
+            console.log('시즌케어 정보 복사:', submitData.season_count, submitData.total_cost, submitData.payment_location);
           }
         }
 
-        await createSeasonCare(cleanData);
+        // 각 정비내역마다 개별 레코드 생성
+        for (const equipmentName of validItems) {
+          const cleanData = {
+            customer_name: submitData.customer_name,
+            customer_phone: submitData.customer_phone,
+            customer_memo: submitData.customer_memo || null,
+            service_date: submitData.service_date,
+            service_description: equipmentName, // 각 정비내역을 개별로 저장
+            total_cost: submitData.total_cost || null,
+            payment_status: submitData.payment_status || 'unpaid',
+            branch: userInfo?.isAdmin ? (submitData.branch || userInfo?.branchName) : userInfo?.branchName,
+            notes: submitData.notes || null,
+            season_count: submitData.season_count || null,
+            payment_location: userInfo?.isAdmin ? (submitData.payment_location || userInfo?.branchName) : userInfo?.branchName,
+            contract_number: contractNumber
+          };
+
+          console.log('정비내역 생성:', equipmentName, cleanData);
+          await createSeasonCare(cleanData);
+        }
       }
 
       setShowModal(false);
