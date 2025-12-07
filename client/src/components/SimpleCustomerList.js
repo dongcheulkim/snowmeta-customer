@@ -200,6 +200,7 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
         return dateA - dateB;
       });
       customer.firstBranch = sortedServices[0].branch;
+      customer.firstService = sortedServices[0]; // 1번째 서비스 저장
     }
   });
 
@@ -215,7 +216,7 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
   }, {});
 
   // 검색 및 미결제 필터링 (전체 고객 기준)
-  const filteredAllCustomerList = allCustomerList.filter(customer => {
+  let filteredAllCustomerList = allCustomerList.filter(customer => {
     // 지점 필터 적용
     if (branchFilter && customer.firstBranch !== branchFilter) {
       return false;
@@ -234,6 +235,17 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
       customer.customer_phone.toLowerCase().includes(searchLower)
     );
   });
+
+  // 지점 필터가 활성화된 경우, 각 고객의 서비스를 1번째만 보여주도록 수정
+  if (branchFilter) {
+    filteredAllCustomerList = filteredAllCustomerList.map(customer => ({
+      ...customer,
+      services: customer.firstService ? [customer.firstService] : [],
+      totalServices: 1,
+      unpaidServices: customer.firstService && (customer.firstService.payment_status === 'unpaid' || customer.firstService.payment_status === '미결제') ? 1 : 0,
+      totalAmount: parseInt(customer.firstService?.total_cost) || 0
+    }));
+  }
 
   // 페이지네이션 적용
   const customersPerPage = 20;
