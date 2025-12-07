@@ -18,6 +18,7 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
   const [showAddCustomerForm, setShowAddCustomerForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showUnpaidOnly, setShowUnpaidOnly] = useState(false);
+  const [branchFilter, setBranchFilter] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedCustomerForDetail, setSelectedCustomerForDetail] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -173,7 +174,8 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
         services: [],
         totalServices: 0,
         unpaidServices: 0,
-        totalAmount: 0
+        totalAmount: 0,
+        firstBranch: null // 최초 등록 지점
       };
     }
     acc[key].services.push(service);
@@ -189,10 +191,36 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
     return acc;
   }, {});
 
+  // 각 고객의 최초 등록 지점 찾기 (가장 오래된 서비스의 지점)
+  Object.values(allGroupedCustomers).forEach(customer => {
+    if (customer.services.length > 0) {
+      const sortedServices = [...customer.services].sort((a, b) => {
+        const dateA = new Date(a.service_date || a.created_at);
+        const dateB = new Date(b.service_date || b.created_at);
+        return dateA - dateB;
+      });
+      customer.firstBranch = sortedServices[0].branch;
+    }
+  });
+
   const allCustomerList = Object.values(allGroupedCustomers);
+
+  // 지점별 고객 수 계산
+  const branchStats = allCustomerList.reduce((acc, customer) => {
+    const branch = customer.firstBranch;
+    if (branch) {
+      acc[branch] = (acc[branch] || 0) + 1;
+    }
+    return acc;
+  }, {});
 
   // 검색 및 미결제 필터링 (전체 고객 기준)
   const filteredAllCustomerList = allCustomerList.filter(customer => {
+    // 지점 필터 적용
+    if (branchFilter && customer.firstBranch !== branchFilter) {
+      return false;
+    }
+
     // 미결제 필터 적용
     if (showUnpaidOnly && customer.unpaidServices === 0) {
       return false;
@@ -436,6 +464,109 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
               ✕
             </button>
           )}
+        </div>
+      </div>
+
+      {/* 지점별 필터 */}
+      <div style={{
+        marginBottom: '1.5rem',
+        display: 'flex',
+        gap: '0.75rem',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <h3 style={{ color: '#9CA3AF', fontSize: '0.875rem', margin: '0' }}>
+            고객 목록
+          </h3>
+        </div>
+
+        {/* 전체 버튼 */}
+        <div
+          onClick={() => setBranchFilter(null)}
+          style={{
+            backgroundColor: '#1F2937',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            border: '1px solid #374151',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            cursor: 'pointer'
+          }}
+        >
+          <h3 style={{ color: '#9CA3AF', fontSize: '0.75rem', fontWeight: '500', margin: '0' }}>
+            전체
+          </h3>
+          <p style={{ color: '#3B82F6', fontSize: '1.25rem', fontWeight: 'bold', margin: '0' }}>
+            {allCustomerList.length}
+          </p>
+        </div>
+
+        {/* 지점별 버튼 */}
+        {Object.entries(branchStats).sort(([a], [b]) => a.localeCompare(b)).map(([branch, count]) => (
+          <div
+            key={branch}
+            onClick={() => setBranchFilter(branchFilter === branch ? null : branch)}
+            style={{
+              backgroundColor: branchFilter === branch ? '#1E3A5F' : '#1F2937',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              border: `1px solid ${branchFilter === branch ? '#3B82F6' : '#374151'}`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              cursor: 'pointer'
+            }}
+          >
+            <h3 style={{
+              color: branchFilter === branch ? '#60A5FA' : '#9CA3AF',
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              margin: '0'
+            }}>
+              {branch}
+            </h3>
+            <p style={{
+              color: branchFilter === branch ? '#60A5FA' : '#3B82F6',
+              fontSize: '1.25rem',
+              fontWeight: 'bold',
+              margin: '0'
+            }}>
+              {count}
+            </p>
+          </div>
+        ))}
+
+        {/* 미결제 버튼 */}
+        <div
+          onClick={() => setShowUnpaidOnly(!showUnpaidOnly)}
+          style={{
+            backgroundColor: showUnpaidOnly ? '#7C2D12' : '#1F2937',
+            padding: '0.75rem 1rem',
+            borderRadius: '8px',
+            border: `1px solid ${showUnpaidOnly ? '#DC2626' : '#374151'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            cursor: 'pointer'
+          }}
+        >
+          <h3 style={{
+            color: showUnpaidOnly ? '#FCA5A5' : '#9CA3AF',
+            fontSize: '0.75rem',
+            fontWeight: '500',
+            margin: '0'
+          }}>
+            미결제
+          </h3>
+          <p style={{
+            color: showUnpaidOnly ? '#FCA5A5' : '#DC2626',
+            fontSize: '1.25rem',
+            fontWeight: 'bold',
+            margin: '0'
+          }}>
+            {allCustomerList.filter(customer => customer.unpaidServices > 0).length}
+          </p>
         </div>
       </div>
 
