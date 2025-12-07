@@ -484,14 +484,9 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
         marginBottom: '1.5rem',
         display: 'flex',
         gap: '0.75rem',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        alignItems: 'center'
       }}>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-          <h3 style={{ color: '#9CA3AF', fontSize: '0.875rem', margin: '0' }}>
-            고객 목록
-          </h3>
-        </div>
-
         {/* 전체 버튼 */}
         <div
           onClick={() => setBranchFilter(null)}
@@ -589,90 +584,6 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
         borderRadius: '12px',
         overflow: 'hidden'
       }}>
-        <div style={{
-          backgroundColor: '#000',
-          padding: '1.5rem',
-          borderBottom: '1px solid #374151'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <h3 style={{
-              color: '#fff',
-              fontSize: '1.125rem',
-              fontWeight: '600',
-              margin: '0'
-            }}>
-              고객 목록
-              {(searchTerm || showUnpaidOnly) && (
-                <span style={{color: '#9CA3AF', fontSize: '0.875rem', marginLeft: '0.5rem'}}>
-                  {searchTerm && `"${searchTerm}" 검색`}
-                  {searchTerm && showUnpaidOnly && ' + '}
-                  {showUnpaidOnly && '미결제 필터'}
-                  {' 결과'}
-                </span>
-              )}
-            </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ color: '#fff', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                    {allCustomerList.length}
-                  </div>
-                  <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
-                    총 고객 수
-                  </div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    color: allCustomerList.filter(customer => customer.unpaidServices > 0).length > 0 ? '#DC2626' : '#fff',
-                    fontSize: '0.9rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {allCustomerList.filter(customer => customer.unpaidServices > 0).length}
-                  </div>
-                  <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
-                    미결제 고객
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button
-                onClick={() => setShowUnpaidOnly(!showUnpaidOnly)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#374151',
-                  color: showUnpaidOnly ? '#DC2626' : '#fff',
-                  border: '1px solid #4B5563',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                미결제
-              </button>
-              <button
-                onClick={() => setShowAddCustomerForm(true)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#10B981',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  cursor: 'pointer'
-                }}
-              >
-                ➕ 새 고객 등록
-              </button>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {allCustomerList.length === 0 ? (
           <div style={{
