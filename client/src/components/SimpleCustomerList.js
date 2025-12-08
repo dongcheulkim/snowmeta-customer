@@ -575,6 +575,24 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
             {allCustomerList.filter(customer => customer.unpaidServices > 0).length}
           </p>
         </div>
+
+        {/* 새 고객 등록 버튼 */}
+        <button
+          onClick={() => setShowAddCustomerForm(true)}
+          style={{
+            padding: '0.75rem 1rem',
+            backgroundColor: '#10B981',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '8px',
+            fontSize: '0.875rem',
+            fontWeight: '600',
+            cursor: 'pointer',
+            marginLeft: 'auto'
+          }}
+        >
+          ➕ 새 고객 등록
+        </button>
       </div>
 
       {/* Customer Grid */}
