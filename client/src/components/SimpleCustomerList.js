@@ -479,122 +479,6 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
         </div>
       </div>
 
-      {/* 지점별 필터 */}
-      <div style={{
-        marginBottom: '1.5rem',
-        display: 'flex',
-        gap: '0.75rem',
-        flexWrap: 'wrap',
-        alignItems: 'center'
-      }}>
-        {/* 전체 버튼 */}
-        <div
-          onClick={() => setBranchFilter(null)}
-          style={{
-            backgroundColor: '#1F2937',
-            padding: '0.75rem 1rem',
-            borderRadius: '8px',
-            border: '1px solid #374151',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            cursor: 'pointer'
-          }}
-        >
-          <h3 style={{ color: '#9CA3AF', fontSize: '0.75rem', fontWeight: '500', margin: '0' }}>
-            전체
-          </h3>
-          <p style={{ color: '#3B82F6', fontSize: '1.25rem', fontWeight: 'bold', margin: '0' }}>
-            {allCustomerList.length}
-          </p>
-        </div>
-
-        {/* 지점별 버튼 */}
-        {Object.entries(branchStats).sort(([a], [b]) => a.localeCompare(b)).map(([branch, count]) => (
-          <div
-            key={branch}
-            onClick={() => setBranchFilter(branchFilter === branch ? null : branch)}
-            style={{
-              backgroundColor: branchFilter === branch ? '#1E3A5F' : '#1F2937',
-              padding: '0.75rem 1rem',
-              borderRadius: '8px',
-              border: `1px solid ${branchFilter === branch ? '#3B82F6' : '#374151'}`,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              cursor: 'pointer'
-            }}
-          >
-            <h3 style={{
-              color: branchFilter === branch ? '#60A5FA' : '#9CA3AF',
-              fontSize: '0.75rem',
-              fontWeight: '500',
-              margin: '0'
-            }}>
-              {branch}
-            </h3>
-            <p style={{
-              color: branchFilter === branch ? '#60A5FA' : '#3B82F6',
-              fontSize: '1.25rem',
-              fontWeight: 'bold',
-              margin: '0'
-            }}>
-              {count}
-            </p>
-          </div>
-        ))}
-
-        {/* 미결제 버튼 */}
-        <div
-          onClick={() => setShowUnpaidOnly(!showUnpaidOnly)}
-          style={{
-            backgroundColor: showUnpaidOnly ? '#7C2D12' : '#1F2937',
-            padding: '0.75rem 1rem',
-            borderRadius: '8px',
-            border: `1px solid ${showUnpaidOnly ? '#DC2626' : '#374151'}`,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            cursor: 'pointer'
-          }}
-        >
-          <h3 style={{
-            color: showUnpaidOnly ? '#FCA5A5' : '#9CA3AF',
-            fontSize: '0.75rem',
-            fontWeight: '500',
-            margin: '0'
-          }}>
-            미결제
-          </h3>
-          <p style={{
-            color: showUnpaidOnly ? '#FCA5A5' : '#DC2626',
-            fontSize: '1.25rem',
-            fontWeight: 'bold',
-            margin: '0'
-          }}>
-            {allCustomerList.filter(customer => customer.unpaidServices > 0).length}
-          </p>
-        </div>
-
-        {/* 새 고객 등록 버튼 */}
-        <button
-          onClick={() => setShowAddCustomerForm(true)}
-          style={{
-            padding: '0.75rem 1rem',
-            backgroundColor: '#10B981',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            fontWeight: '600',
-            cursor: 'pointer',
-            marginLeft: 'auto'
-          }}
-        >
-          ➕ 새 고객 등록
-        </button>
-      </div>
-
       {/* Customer Grid */}
       <div style={{
         backgroundColor: '#1e293b',
@@ -602,6 +486,123 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
         borderRadius: '12px',
         overflow: 'hidden'
       }}>
+        {/* 지점별 필터 */}
+        <div style={{
+          backgroundColor: '#000',
+          padding: '1.5rem',
+          borderBottom: '1px solid #374151',
+          display: 'flex',
+          gap: '0.75rem',
+          flexWrap: 'wrap',
+          alignItems: 'center'
+        }}>
+          {/* 전체 버튼 */}
+          <div
+            onClick={() => setBranchFilter(null)}
+            style={{
+              backgroundColor: '#1F2937',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              border: '1px solid #374151',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              cursor: 'pointer'
+            }}
+          >
+            <h3 style={{ color: '#9CA3AF', fontSize: '0.75rem', fontWeight: '500', margin: '0' }}>
+              전체
+            </h3>
+            <p style={{ color: '#3B82F6', fontSize: '1.25rem', fontWeight: 'bold', margin: '0' }}>
+              {allCustomerList.length}
+            </p>
+          </div>
+
+          {/* 지점별 버튼 */}
+          {Object.entries(branchStats).sort(([a], [b]) => a.localeCompare(b)).map(([branch, count]) => (
+            <div
+              key={branch}
+              onClick={() => setBranchFilter(branchFilter === branch ? null : branch)}
+              style={{
+                backgroundColor: branchFilter === branch ? '#1E3A5F' : '#1F2937',
+                padding: '0.75rem 1rem',
+                borderRadius: '8px',
+                border: `1px solid ${branchFilter === branch ? '#3B82F6' : '#374151'}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                cursor: 'pointer'
+              }}
+            >
+              <h3 style={{
+                color: branchFilter === branch ? '#60A5FA' : '#9CA3AF',
+                fontSize: '0.75rem',
+                fontWeight: '500',
+                margin: '0'
+              }}>
+                {branch}
+              </h3>
+              <p style={{
+                color: branchFilter === branch ? '#60A5FA' : '#3B82F6',
+                fontSize: '1.25rem',
+                fontWeight: 'bold',
+                margin: '0'
+              }}>
+                {count}
+              </p>
+            </div>
+          ))}
+
+          {/* 미결제 버튼 */}
+          <div
+            onClick={() => setShowUnpaidOnly(!showUnpaidOnly)}
+            style={{
+              backgroundColor: showUnpaidOnly ? '#7C2D12' : '#1F2937',
+              padding: '0.75rem 1rem',
+              borderRadius: '8px',
+              border: `1px solid ${showUnpaidOnly ? '#DC2626' : '#374151'}`,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              cursor: 'pointer'
+            }}
+          >
+            <h3 style={{
+              color: showUnpaidOnly ? '#FCA5A5' : '#9CA3AF',
+              fontSize: '0.75rem',
+              fontWeight: '500',
+              margin: '0'
+            }}>
+              미결제
+            </h3>
+            <p style={{
+              color: showUnpaidOnly ? '#FCA5A5' : '#DC2626',
+              fontSize: '1.25rem',
+              fontWeight: 'bold',
+              margin: '0'
+            }}>
+              {allCustomerList.filter(customer => customer.unpaidServices > 0).length}
+            </p>
+          </div>
+
+          {/* 새 고객 등록 버튼 */}
+          <button
+            onClick={() => setShowAddCustomerForm(true)}
+            style={{
+              padding: '0.75rem 1rem',
+              backgroundColor: '#10B981',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              cursor: 'pointer',
+              marginLeft: 'auto'
+            }}
+          >
+            ➕ 새 고객 등록
+          </button>
+        </div>
 
         {allCustomerList.length === 0 ? (
           <div style={{
