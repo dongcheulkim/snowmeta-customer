@@ -525,8 +525,8 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
       return false;
     }
 
-    // 미결제 필터 적용
-    if (showUnpaidOnly && customer.unpaidServices === 0) {
+    // 미결제 필터 적용 (결제현황이 미결제인 계약만)
+    if (showUnpaidOnly && customer.paymentStatus !== 'unpaid' && customer.paymentStatus !== '미결제') {
       return false;
     }
 
@@ -790,7 +790,7 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                         }}
                       >
                         <div style={{ color: showUnpaidOnly ? '#fff' : '#DC2626', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                          {customerList.filter(c => c.unpaidServices > 0).length}
+                          {customerList.filter(c => c.paymentStatus === 'unpaid' || c.paymentStatus === '미결제').length}
                         </div>
                         <div style={{ color: showUnpaidOnly ? '#E5E7EB' : '#9CA3AF', fontSize: '0.65rem' }}>
                           미결제
