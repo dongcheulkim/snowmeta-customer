@@ -814,6 +814,26 @@ function App() {
               ⛷️ 시즌케어
             </button>
             <button
+              onClick={() => handleCategoryChange('fullseason')}
+              style={{
+                padding: '12px 16px',
+                backgroundColor: activeCategory === 'fullseason' ? '#374151' : 'transparent',
+                color: activeCategory === 'fullseason' ? '#fff' : '#9CA3AF',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                textAlign: 'left',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              ⛷️ 풀시즌케어
+            </button>
+            <button
               onClick={() => handleCategoryChange('promo')}
               style={{
                 padding: '12px 16px',
@@ -1427,6 +1447,12 @@ function App() {
         {activeCategory === 'season' && (
           <div style={{ padding: '0' }}>
             <SeasonCare userInfo={userInfo} />
+          </div>
+        )}
+
+        {activeCategory === 'fullseason' && (
+          <div style={{ padding: '0' }}>
+            <SeasonCare userInfo={userInfo} isFullSeason={true} />
           </div>
         )}
 
