@@ -11,6 +11,7 @@ import { getNotices, createNotice, deleteNotice } from './services/noticeService
 import { updatePassword } from './services/userService';
 import { getAllServices } from './services/serviceService';
 import { getSeasonCares } from './services/seasonCareService';
+import { getFullSeasonCares } from './services/fullSeasonCareService';
 import logo from './assets/logo.svg';
 
 // 매출 통계 모달 컴포넌트
@@ -505,6 +506,13 @@ function App() {
   const [showNoticeDetail, setShowNoticeDetail] = useState(false);
   const [showSalesModal, setShowSalesModal] = useState(false);
 
+  // 통합 검색 관련 state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedSearchResult, setSelectedSearchResult] = useState(null);
+  const [showSearchDetailModal, setShowSearchDetailModal] = useState(false);
+
   const handleCustomerAdded = () => {
     setRefreshList(prev => prev + 1);
   };
@@ -587,6 +595,83 @@ function App() {
     setShowNoticeDetail(false);
   };
 
+  // 통합 검색 함수
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const [generalServices, seasonCares, fullSeasonCares] = await Promise.all([
+        getAllServices(),
+        getSeasonCares(),
+        getFullSeasonCares()
+      ]);
+
+      const query = searchQuery.toLowerCase();
+      const results = [];
+
+      // 일반정비 검색
+      generalServices.forEach(service => {
+        if (
+          service.customer_name?.toLowerCase().includes(query) ||
+          service.customer_phone?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            ...service,
+            type: '일반정비',
+            typeColor: '#10B981'
+          });
+        }
+      });
+
+      // 시즌케어 검색
+      seasonCares.forEach(service => {
+        if (
+          service.customer_name?.toLowerCase().includes(query) ||
+          service.customer_phone?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            ...service,
+            type: '시즌케어',
+            typeColor: '#3B82F6'
+          });
+        }
+      });
+
+      // 풀시즌케어 검색
+      fullSeasonCares.forEach(service => {
+        if (
+          service.customer_name?.toLowerCase().includes(query) ||
+          service.customer_phone?.toLowerCase().includes(query)
+        ) {
+          results.push({
+            ...service,
+            type: '풀시즌케어',
+            typeColor: '#F59E0B'
+          });
+        }
+      });
+
+      // 최근 날짜순으로 정렬
+      results.sort((a, b) => new Date(b.service_date || b.created_at) - new Date(a.service_date || a.created_at));
+
+      setSearchResults(results);
+    } catch (error) {
+      console.error('검색 실패:', error);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // 검색 결과 더블클릭
+  const handleSearchResultDoubleClick = (result) => {
+    setSelectedSearchResult(result);
+    setShowSearchDetailModal(true);
+  };
 
   // 페이지 로드 시 저장된 로그인 정보 확인
   useEffect(() => {
@@ -1145,6 +1230,114 @@ function App() {
               </div>
             )}
 
+            {/* 통합 검색창 */}
+            <div style={{
+              backgroundColor: '#1e293b',
+              border: '1px solid #374151',
+              borderRadius: '12px',
+              padding: '1.5rem',
+              marginBottom: '2rem'
+            }}>
+              <h3 style={{ color: '#fff', fontSize: '1.125rem', fontWeight: '600', margin: '0 0 1rem' }}>
+                🔍 고객 검색
+              </h3>
+              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: searchResults.length > 0 ? '1.5rem' : '0' }}>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  placeholder="이름 또는 전화번호로 검색..."
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    backgroundColor: '#374151',
+                    border: '2px solid #4B5563',
+                    borderRadius: '8px',
+                    color: '#fff',
+                    fontSize: '0.875rem',
+                    outline: 'none'
+                  }}
+                />
+                <button
+                  onClick={handleSearch}
+                  disabled={isSearching}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#3B82F6',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    cursor: isSearching ? 'not-allowed' : 'pointer',
+                    opacity: isSearching ? 0.7 : 1
+                  }}
+                >
+                  {isSearching ? '검색중...' : '검색'}
+                </button>
+              </div>
+
+              {/* 검색 결과 */}
+              {searchResults.length > 0 && (
+                <div>
+                  <div style={{ color: '#9CA3AF', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+                    {searchResults.length}개의 결과 (더블클릭하여 상세보기)
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={`${result.type}-${result.id}-${index}`}
+                        onDoubleClick={() => handleSearchResultDoubleClick(result)}
+                        style={{
+                          backgroundColor: '#111827',
+                          border: '1px solid #374151',
+                          borderRadius: '8px',
+                          padding: '1rem',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F2937'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#111827'}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                              <span style={{
+                                backgroundColor: result.typeColor,
+                                color: '#fff',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                fontSize: '0.75rem',
+                                fontWeight: '600'
+                              }}>
+                                {result.type}
+                              </span>
+                              <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '600' }}>
+                                {result.customer_name}
+                              </span>
+                              <span style={{ color: '#9CA3AF', fontSize: '0.875rem' }}>
+                                {result.customer_phone}
+                              </span>
+                            </div>
+                            <div style={{ color: '#9CA3AF', fontSize: '0.875rem' }}>
+                              {result.service_description || '-'} | {new Date(result.service_date || result.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchQuery && searchResults.length === 0 && !isSearching && (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#9CA3AF' }}>
+                  검색 결과가 없습니다.
+                </div>
+              )}
+            </div>
+
             {/* 공지사항 목록 */}
             <div style={{
               backgroundColor: '#1e293b',
@@ -1417,6 +1610,154 @@ function App() {
                     }}>
                       <button
                         onClick={handleCloseNoticeDetail}
+                        style={{
+                          padding: '12px 24px',
+                          backgroundColor: '#374151',
+                          color: '#fff',
+                          border: '1px solid #4B5563',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        닫기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 검색 결과 상세보기 모달 */}
+            {showSearchDetailModal && selectedSearchResult && (
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 2000,
+                padding: '20px'
+              }}>
+                <div style={{
+                  backgroundColor: '#1F2937',
+                  borderRadius: '12px',
+                  maxWidth: '600px',
+                  width: '100%',
+                  maxHeight: '80vh',
+                  overflow: 'auto',
+                  position: 'relative',
+                  border: '1px solid #374151'
+                }}>
+                  <div style={{
+                    backgroundColor: '#000',
+                    borderBottom: '1px solid #374151',
+                    padding: '24px',
+                    borderTopLeftRadius: '12px',
+                    borderTopRightRadius: '12px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{
+                          backgroundColor: selectedSearchResult.typeColor,
+                          color: '#fff',
+                          padding: '4px 12px',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '600'
+                        }}>
+                          {selectedSearchResult.type}
+                        </span>
+                        <h2 style={{
+                          fontSize: '20px',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          margin: 0
+                        }}>상세 정보</h2>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSelectedSearchResult(null);
+                          setShowSearchDetailModal(false);
+                        }}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          backgroundColor: '#374151',
+                          border: 'none',
+                          borderRadius: '6px',
+                          color: '#9CA3AF',
+                          fontSize: '18px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '24px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>고객명</div>
+                        <div style={{ color: '#fff', fontSize: '16px', fontWeight: '600' }}>{selectedSearchResult.customer_name}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>전화번호</div>
+                        <div style={{ color: '#fff', fontSize: '16px' }}>{selectedSearchResult.customer_phone}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>서비스 날짜</div>
+                        <div style={{ color: '#fff', fontSize: '16px' }}>
+                          {new Date(selectedSearchResult.service_date || selectedSearchResult.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>서비스 내용</div>
+                        <div style={{ color: '#fff', fontSize: '16px' }}>{selectedSearchResult.service_description || '-'}</div>
+                      </div>
+                      {selectedSearchResult.total_cost && (
+                        <div>
+                          <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>금액</div>
+                          <div style={{ color: '#fff', fontSize: '16px' }}>
+                            {selectedSearchResult.total_cost === '엠버서더' ? '엠버서더' : `${parseInt(selectedSearchResult.total_cost).toLocaleString()}원`}
+                          </div>
+                        </div>
+                      )}
+                      {selectedSearchResult.payment_status && (
+                        <div>
+                          <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>결제 현황</div>
+                          <div style={{
+                            color: selectedSearchResult.payment_status === 'paid' ? '#10B981' : '#DC2626',
+                            fontSize: '16px',
+                            fontWeight: '600'
+                          }}>
+                            {selectedSearchResult.payment_status === 'paid' ? '결제완료' : '미결제'}
+                          </div>
+                        </div>
+                      )}
+                      {selectedSearchResult.notes && (
+                        <div>
+                          <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>메모</div>
+                          <div style={{ color: '#fff', fontSize: '14px', lineHeight: '1.6' }}>{selectedSearchResult.notes}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #374151' }}>
+                      <button
+                        onClick={() => {
+                          setSelectedSearchResult(null);
+                          setShowSearchDetailModal(false);
+                        }}
                         style={{
                           padding: '12px 24px',
                           backgroundColor: '#374151',
