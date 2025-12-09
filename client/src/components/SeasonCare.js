@@ -314,22 +314,32 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
       setSelectedItem(null);
       setIsAddingService(false);
       resetForm();
+
+      // 목록 새로고침
       await loadSeasonCareList();
 
       // 서비스 추가 모드였다면 상세 팝업을 업데이트된 데이터로 유지
       if (wasAddingService && selectedCustomer) {
-        const updatedList = isFullSeason ? await getFullSeasonCares() : await getSeasonCares();
-        const contracts = groupByContract(updatedList);
+        // 약간의 지연 후 최신 데이터 가져오기 (DB 반영 시간 고려)
+        setTimeout(async () => {
+          try {
+            const updatedList = isFullSeason ? await getFullSeasonCares() : await getSeasonCares();
+            const contracts = groupByContract(updatedList);
 
-        // 현재 선택된 계약 찾기 (contractId 또는 전화번호로 찾기)
-        const updatedContract = contracts.find(c =>
-          c.contractId === selectedCustomer.contractId ||
-          c.customer_phone === selectedCustomer.customer_phone
-        );
-        if (updatedContract) {
-          setSelectedCustomer(updatedContract);
-          setShowDetailModal(true);
-        }
+            // 현재 선택된 계약 찾기 (전화번호와 계약번호로 찾기)
+            const updatedContract = contracts.find(c =>
+              c.customer_phone === selectedCustomer.customer_phone &&
+              (!isFullSeason ? c.contractNumber === selectedCustomer.contractNumber : true)
+            );
+
+            if (updatedContract) {
+              setSelectedCustomer(updatedContract);
+              setShowDetailModal(true);
+            }
+          } catch (error) {
+            console.error('상세 정보 업데이트 실패:', error);
+          }
+        }, 300);
       }
     } catch (error) {      alert('저장에 실패했습니다.');
     } finally {
