@@ -509,9 +509,8 @@ function App() {
   // 통합 검색 관련 state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [selectedSearchResult, setSelectedSearchResult] = useState(null);
-  const [showSearchDetailModal, setShowSearchDetailModal] = useState(false);
   const [allServices, setAllServices] = useState({ general: [], season: [], fullSeason: [] });
+  const [selectedCustomerFilter, setSelectedCustomerFilter] = useState(null);
 
   const handleCustomerAdded = () => {
     setRefreshList(prev => prev + 1);
@@ -519,6 +518,25 @@ function App() {
 
   const handleCategoryChange = (category) => {
     setActiveCategory(category);
+    // 카테고리 변경 시 고객 필터 초기화
+    setSelectedCustomerFilter(null);
+  };
+
+  // 검색 결과에서 서비스 타입 클릭 시 해당 페이지로 이동
+  const handleServiceTypeClick = (customerName, customerPhone, serviceType) => {
+    setSelectedCustomerFilter({ name: customerName, phone: customerPhone });
+
+    if (serviceType === '일반정비') {
+      setActiveCategory('general');
+    } else if (serviceType === '시즌케어') {
+      setActiveCategory('season');
+    } else if (serviceType === '풀시즌케어') {
+      setActiveCategory('fullseason');
+    }
+
+    // 검색창 초기화
+    setSearchQuery('');
+    setSearchResults([]);
   };
 
   const handleLogin = (loginData) => {
@@ -595,11 +613,6 @@ function App() {
     setShowNoticeDetail(false);
   };
 
-  // 검색 결과 더블클릭
-  const handleSearchResultDoubleClick = (result) => {
-    setSelectedSearchResult(result);
-    setShowSearchDetailModal(true);
-  };
 
   // 페이지 로드 시 저장된 로그인 정보 확인
   useEffect(() => {
@@ -641,6 +654,18 @@ function App() {
     }
   };
 
+  // 전화번호 정규화 함수 (하이픈 제거, 공백 제거)
+  const normalizePhone = (phone) => {
+    if (!phone) return '';
+    return phone.replace(/[-\s]/g, '');
+  };
+
+  // 이름 정규화 함수 (공백 제거)
+  const normalizeName = (name) => {
+    if (!name) return '';
+    return name.replace(/\s/g, '');
+  };
+
   // 실시간 검색 (검색어 변경 시 자동 검색)
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -649,7 +674,7 @@ function App() {
     }
 
     const query = searchQuery.toLowerCase();
-    const results = [];
+    const customerGroups = {};
 
     // 일반정비 검색
     allServices.general.forEach(service => {
@@ -657,11 +682,19 @@ function App() {
         service.customer_name?.toLowerCase().includes(query) ||
         service.customer_phone?.toLowerCase().includes(query)
       ) {
-        results.push({
-          ...service,
-          type: '일반정비',
-          typeColor: '#10B981'
-        });
+        // 정규화된 이름과 전화번호로 고유 키 생성
+        const normalizedName = normalizeName(service.customer_name);
+        const normalizedPhone = normalizePhone(service.customer_phone);
+        const key = `${normalizedName}_${normalizedPhone}`;
+
+        if (!customerGroups[key]) {
+          customerGroups[key] = {
+            customer_name: service.customer_name,
+            customer_phone: service.customer_phone,
+            types: new Set()
+          };
+        }
+        customerGroups[key].types.add('일반정비');
       }
     });
 
@@ -671,11 +704,19 @@ function App() {
         service.customer_name?.toLowerCase().includes(query) ||
         service.customer_phone?.toLowerCase().includes(query)
       ) {
-        results.push({
-          ...service,
-          type: '시즌케어',
-          typeColor: '#3B82F6'
-        });
+        // 정규화된 이름과 전화번호로 고유 키 생성
+        const normalizedName = normalizeName(service.customer_name);
+        const normalizedPhone = normalizePhone(service.customer_phone);
+        const key = `${normalizedName}_${normalizedPhone}`;
+
+        if (!customerGroups[key]) {
+          customerGroups[key] = {
+            customer_name: service.customer_name,
+            customer_phone: service.customer_phone,
+            types: new Set()
+          };
+        }
+        customerGroups[key].types.add('시즌케어');
       }
     });
 
@@ -685,16 +726,28 @@ function App() {
         service.customer_name?.toLowerCase().includes(query) ||
         service.customer_phone?.toLowerCase().includes(query)
       ) {
-        results.push({
-          ...service,
-          type: '풀시즌케어',
-          typeColor: '#F59E0B'
-        });
+        // 정규화된 이름과 전화번호로 고유 키 생성
+        const normalizedName = normalizeName(service.customer_name);
+        const normalizedPhone = normalizePhone(service.customer_phone);
+        const key = `${normalizedName}_${normalizedPhone}`;
+
+        if (!customerGroups[key]) {
+          customerGroups[key] = {
+            customer_name: service.customer_name,
+            customer_phone: service.customer_phone,
+            types: new Set()
+          };
+        }
+        customerGroups[key].types.add('풀시즌케어');
       }
     });
 
-    // 최근 날짜순으로 정렬
-    results.sort((a, b) => new Date(b.service_date || b.created_at) - new Date(a.service_date || a.created_at));
+    // 결과 변환
+    const results = Object.values(customerGroups).map(group => ({
+      customer_name: group.customer_name,
+      customer_phone: group.customer_phone,
+      types: Array.from(group.types)
+    }));
 
     setSearchResults(results);
   }, [searchQuery, allServices]);
@@ -1270,37 +1323,23 @@ function App() {
               {searchResults.length > 0 && (
                 <div>
                   <div style={{ color: '#9CA3AF', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
-                    {searchResults.length}개의 결과 (더블클릭하여 상세보기)
+                    {searchResults.length}명의 고객
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
                     {searchResults.map((result, index) => (
                       <div
-                        key={`${result.type}-${result.id}-${index}`}
-                        onDoubleClick={() => handleSearchResultDoubleClick(result)}
+                        key={`${result.customer_name}-${result.customer_phone}-${index}`}
                         style={{
                           backgroundColor: '#111827',
                           border: '1px solid #374151',
                           borderRadius: '8px',
                           padding: '1rem',
-                          cursor: 'pointer',
                           transition: 'all 0.2s'
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#1F2937'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#111827'}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                              <span style={{
-                                backgroundColor: result.typeColor,
-                                color: '#fff',
-                                padding: '2px 8px',
-                                borderRadius: '4px',
-                                fontSize: '0.75rem',
-                                fontWeight: '600'
-                              }}>
-                                {result.type}
-                              </span>
                               <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '600' }}>
                                 {result.customer_name}
                               </span>
@@ -1308,8 +1347,36 @@ function App() {
                                 {result.customer_phone}
                               </span>
                             </div>
-                            <div style={{ color: '#9CA3AF', fontSize: '0.875rem' }}>
-                              {result.service_description || '-'} | {new Date(result.service_date || result.created_at).toLocaleDateString()}
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                              {result.types.map((type, typeIndex) => (
+                                <span
+                                  key={typeIndex}
+                                  onClick={() => handleServiceTypeClick(result.customer_name, result.customer_phone, type)}
+                                  style={{
+                                    backgroundColor:
+                                      type === '일반정비' ? '#10B981' :
+                                      type === '시즌케어' ? '#3B82F6' :
+                                      '#F59E0B',
+                                    color: '#fff',
+                                    padding: '4px 10px',
+                                    borderRadius: '4px',
+                                    fontSize: '0.75rem',
+                                    fontWeight: '600',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.target.style.opacity = '0.8';
+                                    e.target.style.transform = 'scale(1.05)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.target.style.opacity = '1';
+                                    e.target.style.transform = 'scale(1)';
+                                  }}
+                                >
+                                  {type}
+                                </span>
+                              ))}
                             </div>
                           </div>
                         </div>
@@ -1617,171 +1684,35 @@ function App() {
               </div>
             )}
 
-            {/* 검색 결과 상세보기 모달 */}
-            {showSearchDetailModal && selectedSearchResult && (
-              <div style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 2000,
-                padding: '20px'
-              }}>
-                <div style={{
-                  backgroundColor: '#1F2937',
-                  borderRadius: '12px',
-                  maxWidth: '600px',
-                  width: '100%',
-                  maxHeight: '80vh',
-                  overflow: 'auto',
-                  position: 'relative',
-                  border: '1px solid #374151'
-                }}>
-                  <div style={{
-                    backgroundColor: '#000',
-                    borderBottom: '1px solid #374151',
-                    padding: '24px',
-                    borderTopLeftRadius: '12px',
-                    borderTopRightRadius: '12px'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{
-                          backgroundColor: selectedSearchResult.typeColor,
-                          color: '#fff',
-                          padding: '4px 12px',
-                          borderRadius: '6px',
-                          fontSize: '14px',
-                          fontWeight: '600'
-                        }}>
-                          {selectedSearchResult.type}
-                        </span>
-                        <h2 style={{
-                          fontSize: '20px',
-                          fontWeight: 'bold',
-                          color: '#fff',
-                          margin: 0
-                        }}>상세 정보</h2>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setSelectedSearchResult(null);
-                          setShowSearchDetailModal(false);
-                        }}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          backgroundColor: '#374151',
-                          border: 'none',
-                          borderRadius: '6px',
-                          color: '#9CA3AF',
-                          fontSize: '18px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style={{ padding: '24px' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                      <div>
-                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>고객명</div>
-                        <div style={{ color: '#fff', fontSize: '16px', fontWeight: '600' }}>{selectedSearchResult.customer_name}</div>
-                      </div>
-                      <div>
-                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>전화번호</div>
-                        <div style={{ color: '#fff', fontSize: '16px' }}>{selectedSearchResult.customer_phone}</div>
-                      </div>
-                      <div>
-                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>서비스 날짜</div>
-                        <div style={{ color: '#fff', fontSize: '16px' }}>
-                          {new Date(selectedSearchResult.service_date || selectedSearchResult.created_at).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>서비스 내용</div>
-                        <div style={{ color: '#fff', fontSize: '16px' }}>{selectedSearchResult.service_description || '-'}</div>
-                      </div>
-                      {selectedSearchResult.total_cost && (
-                        <div>
-                          <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>금액</div>
-                          <div style={{ color: '#fff', fontSize: '16px' }}>
-                            {selectedSearchResult.total_cost === '엠버서더' ? '엠버서더' : `${parseInt(selectedSearchResult.total_cost).toLocaleString()}원`}
-                          </div>
-                        </div>
-                      )}
-                      {selectedSearchResult.payment_status && (
-                        <div>
-                          <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>결제 현황</div>
-                          <div style={{
-                            color: selectedSearchResult.payment_status === 'paid' ? '#10B981' : '#DC2626',
-                            fontSize: '16px',
-                            fontWeight: '600'
-                          }}>
-                            {selectedSearchResult.payment_status === 'paid' ? '결제완료' : '미결제'}
-                          </div>
-                        </div>
-                      )}
-                      {selectedSearchResult.notes && (
-                        <div>
-                          <div style={{ color: '#9CA3AF', fontSize: '12px', marginBottom: '4px' }}>메모</div>
-                          <div style={{ color: '#fff', fontSize: '14px', lineHeight: '1.6' }}>{selectedSearchResult.notes}</div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #374151' }}>
-                      <button
-                        onClick={() => {
-                          setSelectedSearchResult(null);
-                          setShowSearchDetailModal(false);
-                        }}
-                        style={{
-                          padding: '12px 24px',
-                          backgroundColor: '#374151',
-                          color: '#fff',
-                          border: '1px solid #4B5563',
-                          borderRadius: '8px',
-                          fontSize: '14px',
-                          fontWeight: '600',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        닫기
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
         {activeCategory === 'general' && (
           <div style={{ padding: '0' }}>
-            <SimpleCustomerList key={refreshList} onServiceAdded={handleCustomerAdded} />
+            <SimpleCustomerList
+              key={refreshList}
+              onServiceAdded={handleCustomerAdded}
+              selectedCustomerFilter={selectedCustomerFilter}
+            />
           </div>
         )}
 
         {activeCategory === 'season' && (
           <div style={{ padding: '0' }}>
-            <SeasonCare userInfo={userInfo} />
+            <SeasonCare
+              userInfo={userInfo}
+              selectedCustomerFilter={selectedCustomerFilter}
+            />
           </div>
         )}
 
         {activeCategory === 'fullseason' && (
           <div style={{ padding: '0' }}>
-            <SeasonCare userInfo={userInfo} isFullSeason={true} />
+            <SeasonCare
+              userInfo={userInfo}
+              isFullSeason={true}
+              selectedCustomerFilter={selectedCustomerFilter}
+            />
           </div>
         )}
 

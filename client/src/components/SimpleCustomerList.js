@@ -6,7 +6,7 @@ import { useMediaQuery, BREAKPOINTS } from '../hooks/useMediaQuery';
 import LoadingSpinner from './LoadingSpinner';
 import ErrorMessage from './ErrorMessage';
 
-const SimpleCustomerList = ({ onServiceAdded }) => {
+const SimpleCustomerList = ({ onServiceAdded, selectedCustomerFilter }) => {
   const isMobile = useMediaQuery(BREAKPOINTS.mobile);
   const isTablet = useMediaQuery(BREAKPOINTS.tablet);
   const [customers, setCustomers] = useState([]);
@@ -217,6 +217,18 @@ const SimpleCustomerList = ({ onServiceAdded }) => {
 
   // 검색 및 미결제 필터링 (전체 고객 기준)
   let filteredAllCustomerList = allCustomerList.filter(customer => {
+    // 검색에서 선택한 고객 필터 적용 (최우선)
+    if (selectedCustomerFilter) {
+      const normalizedCustomerName = customer.customer_name?.replace(/\s/g, '') || '';
+      const normalizedFilterName = selectedCustomerFilter.name?.replace(/\s/g, '') || '';
+      const normalizedCustomerPhone = customer.customer_phone?.replace(/[-\s]/g, '') || '';
+      const normalizedFilterPhone = selectedCustomerFilter.phone?.replace(/[-\s]/g, '') || '';
+
+      if (normalizedCustomerName !== normalizedFilterName || normalizedCustomerPhone !== normalizedFilterPhone) {
+        return false;
+      }
+    }
+
     // 지점 필터 적용
     if (branchFilter && customer.firstBranch !== branchFilter) {
       return false;

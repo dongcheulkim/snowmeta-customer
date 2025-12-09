@@ -17,7 +17,7 @@ const numberInputStyle = `
   }
 `;
 
-const SeasonCare = ({ userInfo, isFullSeason = false }) => {
+const SeasonCare = ({ userInfo, isFullSeason = false, selectedCustomerFilter }) => {
   const [seasonCareList, setSeasonCareList] = useState([]);
   const [customerList, setCustomerList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -520,6 +520,18 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
 
   // 검색 및 필터링 (고객 기준)
   const filteredCustomerList = customerList.filter(customer => {
+    // 검색에서 선택한 고객 필터 적용 (최우선)
+    if (selectedCustomerFilter) {
+      const normalizedCustomerName = customer.customer_name?.replace(/\s/g, '') || '';
+      const normalizedFilterName = selectedCustomerFilter.name?.replace(/\s/g, '') || '';
+      const normalizedCustomerPhone = customer.customer_phone?.replace(/[-\s]/g, '') || '';
+      const normalizedFilterPhone = selectedCustomerFilter.phone?.replace(/[-\s]/g, '') || '';
+
+      if (normalizedCustomerName !== normalizedFilterName || normalizedCustomerPhone !== normalizedFilterPhone) {
+        return false;
+      }
+    }
+
     // 완료 필터 적용
     if (showCompletedOnly && customer.remainingCount !== 0) {
       return false;
