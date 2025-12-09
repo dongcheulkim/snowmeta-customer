@@ -58,6 +58,28 @@ const SeasonCare = ({ userInfo, isFullSeason = false, selectedCustomerFilter }) 
     loadSeasonCareList();
   }, []);
 
+  // 검색에서 더블클릭으로 들어온 경우 자동으로 상세 팝업 열기
+  useEffect(() => {
+    if (selectedCustomerFilter?.openDetailModal && seasonCareList.length > 0) {
+      // 정규화된 이름과 전화번호로 고객 찾기
+      const normalizedFilterName = selectedCustomerFilter.name?.replace(/\s/g, '') || '';
+      const normalizedFilterPhone = selectedCustomerFilter.phone?.replace(/[-\s]/g, '') || '';
+
+      // 계약별로 그룹화된 리스트에서 찾기
+      const contracts = groupByContract(seasonCareList);
+      const targetContract = contracts.find(contract => {
+        const normalizedCustomerName = contract.customer_name?.replace(/\s/g, '') || '';
+        const normalizedCustomerPhone = contract.customer_phone?.replace(/[-\s]/g, '') || '';
+        return normalizedCustomerName === normalizedFilterName && normalizedCustomerPhone === normalizedFilterPhone;
+      });
+
+      if (targetContract) {
+        setSelectedCustomer(targetContract);
+        setShowDetailModal(true);
+      }
+    }
+  }, [selectedCustomerFilter, seasonCareList]);
+
   // 시즌케어 리스트를 계약별로 그룹화하는 함수
   const groupByContract = (list) => {
     // 전화번호 + contract_number 조합으로 그룹화

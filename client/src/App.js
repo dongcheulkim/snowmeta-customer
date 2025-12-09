@@ -539,6 +539,27 @@ function App() {
     setSearchResults([]);
   };
 
+  // 검색 결과에서 서비스 타입 더블클릭 시 상세정보 팝업 열기
+  const handleServiceTypeDoubleClick = (customerName, customerPhone, serviceType) => {
+    setSelectedCustomerFilter({
+      name: customerName,
+      phone: customerPhone,
+      openDetailModal: true // 상세정보 팝업 열기 플래그
+    });
+
+    if (serviceType === '일반정비') {
+      setActiveCategory('general');
+    } else if (serviceType === '시즌케어') {
+      setActiveCategory('season');
+    } else if (serviceType === '풀시즌케어') {
+      setActiveCategory('fullseason');
+    }
+
+    // 검색창 초기화
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
   const handleLogin = (loginData) => {
     setUserInfo(loginData);
     setIsLoggedIn(true);
@@ -1352,6 +1373,7 @@ function App() {
                                 <span
                                   key={typeIndex}
                                   onClick={() => handleServiceTypeClick(result.customer_name, result.customer_phone, type)}
+                                  onDoubleClick={() => handleServiceTypeDoubleClick(result.customer_name, result.customer_phone, type)}
                                   style={{
                                     backgroundColor:
                                       type === '일반정비' ? '#10B981' :
@@ -1373,6 +1395,7 @@ function App() {
                                     e.target.style.opacity = '1';
                                     e.target.style.transform = 'scale(1)';
                                   }}
+                                  title="클릭: 목록 보기 | 더블클릭: 상세정보"
                                 >
                                   {type}
                                 </span>

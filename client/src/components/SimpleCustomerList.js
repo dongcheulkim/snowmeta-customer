@@ -49,6 +49,53 @@ const SimpleCustomerList = ({ onServiceAdded, selectedCustomerFilter }) => {
     fetchData();
   }, [currentPage]);
 
+  // 검색에서 더블클릭으로 들어온 경우 자동으로 상세 팝업 열기
+  useEffect(() => {
+    if (selectedCustomerFilter?.openDetailModal && allServices.length > 0) {
+      // 정규화된 이름과 전화번호로 고객 찾기
+      const normalizedFilterName = selectedCustomerFilter.name?.replace(/\s/g, '') || '';
+      const normalizedFilterPhone = selectedCustomerFilter.phone?.replace(/[-\s]/g, '') || '';
+
+      // allServices로부터 고객별 데이터 그룹화
+      const groupedCustomers = allServices.reduce((acc, service) => {
+        const key = `${service.customer_name}-${service.customer_phone}`;
+        if (!acc[key]) {
+          acc[key] = {
+            customer_name: service.customer_name,
+            customer_phone: service.customer_phone,
+            customer_memo: service.customer_memo || '',
+            services: [],
+            totalServices: 0,
+            unpaidServices: 0,
+            totalAmount: 0
+          };
+        }
+        acc[key].services.push(service);
+        acc[key].totalServices += 1;
+        acc[key].totalAmount += parseInt(service.total_cost) || 0;
+        if (service.payment_status === 'unpaid' || service.payment_status === '미결제') {
+          acc[key].unpaidServices += 1;
+        }
+        if (service.customer_memo) {
+          acc[key].customer_memo = service.customer_memo;
+        }
+        return acc;
+      }, {});
+
+      // 해당 고객 찾기
+      const targetCustomer = Object.values(groupedCustomers).find(customer => {
+        const normalizedCustomerName = customer.customer_name?.replace(/\s/g, '') || '';
+        const normalizedCustomerPhone = customer.customer_phone?.replace(/[-\s]/g, '') || '';
+        return normalizedCustomerName === normalizedFilterName && normalizedCustomerPhone === normalizedFilterPhone;
+      });
+
+      if (targetCustomer) {
+        setSelectedCustomerForDetail(targetCustomer);
+        setShowDetailModal(true);
+      }
+    }
+  }, [selectedCustomerFilter, allServices]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
