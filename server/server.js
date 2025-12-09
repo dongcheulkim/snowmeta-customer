@@ -10,6 +10,7 @@ require('dotenv').config();
 const customerRoutes = require('./routes/customerRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const seasonCareRoutes = require('./routes/seasonCareRoutes');
+const fullSeasonCareRoutes = require('./routes/fullSeasonCareRoutes');
 const promoAthleteRoutes = require('./routes/promoAthleteRoutes');
 const ambassadorRoutes = require('./routes/ambassadorRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
@@ -110,6 +111,7 @@ app.use((error, req, res, next) => {
 app.use('/api/customers', customerRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/season-care', seasonCareRoutes);
+app.use('/api/full-season-care', fullSeasonCareRoutes);
 app.use('/api/promo-athletes', promoAthleteRoutes);
 app.use('/api/ambassadors', ambassadorRoutes);
 app.use('/api/schedules', scheduleRoutes);
