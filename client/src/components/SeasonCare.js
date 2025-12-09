@@ -525,6 +525,11 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
       return false;
     }
 
+    // 미결제 필터 적용
+    if (showUnpaidOnly && customer.unpaidServices === 0) {
+      return false;
+    }
+
     // 지점 필터 적용
     if (selectedBranchFilter && customer.paymentLocation !== selectedBranchFilter) {
       return false;
