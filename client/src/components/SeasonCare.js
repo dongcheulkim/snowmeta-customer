@@ -768,6 +768,29 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                           비발디점
                         </div>
                       </button>
+
+                      <button
+                        onClick={() => {
+                          setShowUnpaidOnly(!showUnpaidOnly);
+                          setCurrentPage(1);
+                        }}
+                        style={{
+                          textAlign: 'center',
+                          padding: '4px 12px',
+                          backgroundColor: showUnpaidOnly ? '#DC2626' : 'transparent',
+                          border: showUnpaidOnly ? '2px solid #DC2626' : '2px solid #374151',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <div style={{ color: showUnpaidOnly ? '#fff' : '#DC2626', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                          {customerList.filter(c => c.unpaidServices > 0).length}
+                        </div>
+                        <div style={{ color: showUnpaidOnly ? '#E5E7EB' : '#9CA3AF', fontSize: '0.65rem' }}>
+                          미결제
+                        </div>
+                      </button>
                     </>
                   );
                 })()}
