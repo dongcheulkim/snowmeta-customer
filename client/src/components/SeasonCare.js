@@ -823,7 +823,7 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
             {/* 테이블 헤더 */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: isFullSeason ? '2fr 0.6fr 1.2fr' : '2fr 0.6fr 1.2fr 1fr 0.8fr',
+              gridTemplateColumns: isFullSeason ? '2fr 1.2fr' : '2fr 0.6fr 1.2fr 1fr 0.8fr',
               gap: '0.5rem',
               padding: '0.5rem 1rem',
               backgroundColor: '#000',
@@ -833,7 +833,7 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
               color: '#9CA3AF'
             }}>
               <div>고객정보</div>
-              <div>계약번호</div>
+              {!isFullSeason && <div>계약번호</div>}
               <div>최근 정비일</div>
               {!isFullSeason && <div>시즌케어횟수</div>}
               {!isFullSeason && <div>남은횟수</div>}
@@ -855,7 +855,7 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                     borderBottom: index === currentCustomers.length - 1 ? 'none' : '1px solid #374151',
                     padding: '0.5rem 1rem',
                     display: 'grid',
-                    gridTemplateColumns: isFullSeason ? '2fr 0.6fr 1.2fr' : '2fr 0.6fr 1.2fr 1fr 0.8fr',
+                    gridTemplateColumns: isFullSeason ? '2fr 1.2fr' : '2fr 0.6fr 1.2fr 1fr 0.8fr',
                     gap: '0.5rem',
                     alignItems: 'center',
                     fontSize: '0.8rem',
@@ -894,13 +894,15 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                     </div>
                   </div>
 
-                  <div style={{
-                    color: '#10B981',
-                    fontWeight: '600',
-                    fontSize: '1rem'
-                  }}>
-                    {customer.contractNumber}
-                  </div>
+                  {!isFullSeason && (
+                    <div style={{
+                      color: '#10B981',
+                      fontWeight: '600',
+                      fontSize: '1rem'
+                    }}>
+                      {customer.contractNumber}
+                    </div>
+                  )}
 
                   <div>
                     <div style={{ color: '#9CA3AF', fontWeight: '500', fontSize: '0.875rem' }}>
