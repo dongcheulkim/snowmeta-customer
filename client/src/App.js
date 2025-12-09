@@ -509,9 +509,9 @@ function App() {
   // 통합 검색 관련 state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [selectedSearchResult, setSelectedSearchResult] = useState(null);
   const [showSearchDetailModal, setShowSearchDetailModal] = useState(false);
+  const [allServices, setAllServices] = useState({ general: [], season: [], fullSeason: [] });
 
   const handleCustomerAdded = () => {
     setRefreshList(prev => prev + 1);
@@ -595,78 +595,6 @@ function App() {
     setShowNoticeDetail(false);
   };
 
-  // 통합 검색 함수
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    try {
-      const [generalServices, seasonCares, fullSeasonCares] = await Promise.all([
-        getAllServices(),
-        getSeasonCares(),
-        getFullSeasonCares()
-      ]);
-
-      const query = searchQuery.toLowerCase();
-      const results = [];
-
-      // 일반정비 검색
-      generalServices.forEach(service => {
-        if (
-          service.customer_name?.toLowerCase().includes(query) ||
-          service.customer_phone?.toLowerCase().includes(query)
-        ) {
-          results.push({
-            ...service,
-            type: '일반정비',
-            typeColor: '#10B981'
-          });
-        }
-      });
-
-      // 시즌케어 검색
-      seasonCares.forEach(service => {
-        if (
-          service.customer_name?.toLowerCase().includes(query) ||
-          service.customer_phone?.toLowerCase().includes(query)
-        ) {
-          results.push({
-            ...service,
-            type: '시즌케어',
-            typeColor: '#3B82F6'
-          });
-        }
-      });
-
-      // 풀시즌케어 검색
-      fullSeasonCares.forEach(service => {
-        if (
-          service.customer_name?.toLowerCase().includes(query) ||
-          service.customer_phone?.toLowerCase().includes(query)
-        ) {
-          results.push({
-            ...service,
-            type: '풀시즌케어',
-            typeColor: '#F59E0B'
-          });
-        }
-      });
-
-      // 최근 날짜순으로 정렬
-      results.sort((a, b) => new Date(b.service_date || b.created_at) - new Date(a.service_date || a.created_at));
-
-      setSearchResults(results);
-    } catch (error) {
-      console.error('검색 실패:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   // 검색 결과 더블클릭
   const handleSearchResultDoubleClick = (result) => {
     setSelectedSearchResult(result);
@@ -691,8 +619,85 @@ function App() {
   useEffect(() => {
     if (isLoggedIn) {
       loadNotices();
+      loadAllServicesData();
     }
   }, [isLoggedIn]);
+
+  // 모든 서비스 데이터 미리 로드
+  const loadAllServicesData = async () => {
+    try {
+      const [generalServices, seasonCares, fullSeasonCares] = await Promise.all([
+        getAllServices(),
+        getSeasonCares(),
+        getFullSeasonCares()
+      ]);
+      setAllServices({
+        general: generalServices || [],
+        season: seasonCares || [],
+        fullSeason: fullSeasonCares || []
+      });
+    } catch (error) {
+      console.error('서비스 데이터 로드 실패:', error);
+    }
+  };
+
+  // 실시간 검색 (검색어 변경 시 자동 검색)
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const results = [];
+
+    // 일반정비 검색
+    allServices.general.forEach(service => {
+      if (
+        service.customer_name?.toLowerCase().includes(query) ||
+        service.customer_phone?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          ...service,
+          type: '일반정비',
+          typeColor: '#10B981'
+        });
+      }
+    });
+
+    // 시즌케어 검색
+    allServices.season.forEach(service => {
+      if (
+        service.customer_name?.toLowerCase().includes(query) ||
+        service.customer_phone?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          ...service,
+          type: '시즌케어',
+          typeColor: '#3B82F6'
+        });
+      }
+    });
+
+    // 풀시즌케어 검색
+    allServices.fullSeason.forEach(service => {
+      if (
+        service.customer_name?.toLowerCase().includes(query) ||
+        service.customer_phone?.toLowerCase().includes(query)
+      ) {
+        results.push({
+          ...service,
+          type: '풀시즌케어',
+          typeColor: '#F59E0B'
+        });
+      }
+    });
+
+    // 최근 날짜순으로 정렬
+    results.sort((a, b) => new Date(b.service_date || b.created_at) - new Date(a.service_date || a.created_at));
+
+    setSearchResults(results);
+  }, [searchQuery, allServices]);
 
   // 실시간 시간 업데이트
   useEffect(() => {
@@ -1239,43 +1244,26 @@ function App() {
               marginBottom: '2rem'
             }}>
               <h3 style={{ color: '#fff', fontSize: '1.125rem', fontWeight: '600', margin: '0 0 1rem' }}>
-                🔍 고객 검색
+                🔍 고객 검색 (실시간)
               </h3>
-              <div style={{ display: 'flex', gap: '0.75rem', marginBottom: searchResults.length > 0 ? '1.5rem' : '0' }}>
+              <div style={{ marginBottom: searchResults.length > 0 ? '1.5rem' : '0' }}>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                  placeholder="이름 또는 전화번호로 검색..."
+                  placeholder="이름 또는 전화번호를 입력하세요..."
                   style={{
-                    flex: 1,
+                    width: '100%',
                     padding: '0.75rem',
                     backgroundColor: '#374151',
                     border: '2px solid #4B5563',
                     borderRadius: '8px',
                     color: '#fff',
                     fontSize: '0.875rem',
-                    outline: 'none'
+                    outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
-                <button
-                  onClick={handleSearch}
-                  disabled={isSearching}
-                  style={{
-                    padding: '0.75rem 1.5rem',
-                    backgroundColor: '#3B82F6',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: isSearching ? 'not-allowed' : 'pointer',
-                    opacity: isSearching ? 0.7 : 1
-                  }}
-                >
-                  {isSearching ? '검색중...' : '검색'}
-                </button>
               </div>
 
               {/* 검색 결과 */}
@@ -1331,7 +1319,7 @@ function App() {
                 </div>
               )}
 
-              {searchQuery && searchResults.length === 0 && !isSearching && (
+              {searchQuery && searchResults.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '2rem', color: '#9CA3AF' }}>
                   검색 결과가 없습니다.
                 </div>
