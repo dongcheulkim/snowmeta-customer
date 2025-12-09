@@ -318,7 +318,7 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
 
       // 서비스 추가 모드였다면 상세 팝업을 업데이트된 데이터로 유지
       if (wasAddingService && selectedCustomer) {
-        const updatedList = await getSeasonCares();
+        const updatedList = isFullSeason ? await getFullSeasonCares() : await getSeasonCares();
         const contracts = groupByContract(updatedList);
 
         // 현재 선택된 계약 찾기 (contractId 또는 전화번호로 찾기)
