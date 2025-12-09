@@ -1354,53 +1354,50 @@ function App() {
                           backgroundColor: '#111827',
                           border: '1px solid #374151',
                           borderRadius: '8px',
-                          padding: '1rem',
+                          padding: '0.75rem 1rem',
                           transition: 'all 0.2s'
                         }}
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                              <span style={{ color: '#fff', fontSize: '1rem', fontWeight: '600' }}>
-                                {result.customer_name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          <span style={{ color: '#fff', fontSize: '0.95rem', fontWeight: '600', minWidth: '60px' }}>
+                            {result.customer_name}
+                          </span>
+                          <span style={{ color: '#9CA3AF', fontSize: '0.85rem', minWidth: '110px' }}>
+                            {result.customer_phone}
+                          </span>
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            {result.types.map((type, typeIndex) => (
+                              <span
+                                key={typeIndex}
+                                onClick={() => handleServiceTypeClick(result.customer_name, result.customer_phone, type)}
+                                onDoubleClick={() => handleServiceTypeDoubleClick(result.customer_name, result.customer_phone, type)}
+                                style={{
+                                  backgroundColor:
+                                    type === '일반정비' ? '#10B981' :
+                                    type === '시즌케어' ? '#3B82F6' :
+                                    '#F59E0B',
+                                  color: '#fff',
+                                  padding: '3px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '0.7rem',
+                                  fontWeight: '600',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
+                                  whiteSpace: 'nowrap'
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.target.style.opacity = '0.8';
+                                  e.target.style.transform = 'scale(1.05)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.target.style.opacity = '1';
+                                  e.target.style.transform = 'scale(1)';
+                                }}
+                                title="클릭: 목록 보기 | 더블클릭: 상세정보"
+                              >
+                                {type}
                               </span>
-                              <span style={{ color: '#9CA3AF', fontSize: '0.875rem' }}>
-                                {result.customer_phone}
-                              </span>
-                            </div>
-                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                              {result.types.map((type, typeIndex) => (
-                                <span
-                                  key={typeIndex}
-                                  onClick={() => handleServiceTypeClick(result.customer_name, result.customer_phone, type)}
-                                  onDoubleClick={() => handleServiceTypeDoubleClick(result.customer_name, result.customer_phone, type)}
-                                  style={{
-                                    backgroundColor:
-                                      type === '일반정비' ? '#10B981' :
-                                      type === '시즌케어' ? '#3B82F6' :
-                                      '#F59E0B',
-                                    color: '#fff',
-                                    padding: '4px 10px',
-                                    borderRadius: '4px',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '600',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s'
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.target.style.opacity = '0.8';
-                                    e.target.style.transform = 'scale(1.05)';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.target.style.opacity = '1';
-                                    e.target.style.transform = 'scale(1)';
-                                  }}
-                                  title="클릭: 목록 보기 | 더블클릭: 상세정보"
-                                >
-                                  {type}
-                                </span>
-                              ))}
-                            </div>
+                            ))}
                           </div>
                         </div>
                       </div>
