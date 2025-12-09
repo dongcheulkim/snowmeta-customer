@@ -1187,78 +1187,82 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                     />
                   </div>
 
-                  <div>
-                    <label style={{
-                      color: '#E5E7EB',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      display: 'block',
-                      marginBottom: '6px'
-                    }}>시즌케어 횟수</label>
-                    <select
-                      value={formData.season_count || ''}
-                      onChange={(e) => {
-                        const selectedValue = e.target.value;
-                        let price = formData.total_cost;
-
-                        if (selectedValue === '5+왁') {
-                          price = '380000';
-                        } else if (selectedValue === '10+1') {
-                          price = '750000';
-                        }
-
-                        setFormData({...formData, season_count: selectedValue, total_cost: price});
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        backgroundColor: '#2D3748',
-                        border: '2px solid #4A5568',
-                        borderRadius: '8px',
-                        color: '#fff',
+                  {!isFullSeason && (
+                    <div>
+                      <label style={{
+                        color: '#E5E7EB',
                         fontSize: '13px',
-                        boxSizing: 'border-box',
-                        transition: 'all 0.2s ease',
-                        outline: 'none'
-                      }}
-                      onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
-                      onBlur={(e) => e.target.style.borderColor = '#4A5568'}
-                    >
-                      <option value="">선택하세요</option>
-                      <option value="5+왁">5+왁</option>
-                      <option value="10+1">10+1</option>
-                    </select>
-                  </div>
+                        fontWeight: '600',
+                        display: 'block',
+                        marginBottom: '6px'
+                      }}>시즌케어 횟수</label>
+                      <select
+                        value={formData.season_count || ''}
+                        onChange={(e) => {
+                          const selectedValue = e.target.value;
+                          let price = formData.total_cost;
 
-                  <div>
-                    <label style={{
-                      color: '#E5E7EB',
-                      fontSize: '13px',
-                      fontWeight: '600',
-                      display: 'block',
-                      marginBottom: '6px'
-                    }}>결제금액</label>
-                    <input
-                      type="number"
-                      value={formData.total_cost}
-                      onChange={(e) => setFormData({...formData, total_cost: e.target.value})}
-                      placeholder="0"
-                      style={{
-                        width: '100%',
-                        padding: '10px',
-                        backgroundColor: '#2D3748',
-                        border: '2px solid #4A5568',
-                        borderRadius: '8px',
-                        color: '#fff',
+                          if (selectedValue === '5+왁') {
+                            price = '380000';
+                          } else if (selectedValue === '10+1') {
+                            price = '750000';
+                          }
+
+                          setFormData({...formData, season_count: selectedValue, total_cost: price});
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: '#2D3748',
+                          border: '2px solid #4A5568',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
+                          transition: 'all 0.2s ease',
+                          outline: 'none'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
+                        onBlur={(e) => e.target.style.borderColor = '#4A5568'}
+                      >
+                        <option value="">선택하세요</option>
+                        <option value="5+왁">5+왁</option>
+                        <option value="10+1">10+1</option>
+                      </select>
+                    </div>
+                  )}
+
+                  {!isFullSeason && (
+                    <div>
+                      <label style={{
+                        color: '#E5E7EB',
                         fontSize: '13px',
-                        boxSizing: 'border-box',
+                        fontWeight: '600',
+                        display: 'block',
+                        marginBottom: '6px'
+                      }}>결제금액</label>
+                      <input
+                        type="number"
+                        value={formData.total_cost}
+                        onChange={(e) => setFormData({...formData, total_cost: e.target.value})}
+                        placeholder="0"
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: '#2D3748',
+                          border: '2px solid #4A5568',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
                         transition: 'all 0.2s ease',
                         outline: 'none'
                       }}
                       onFocus={(e) => e.target.style.borderColor = '#3B82F6'}
                       onBlur={(e) => e.target.style.borderColor = '#4A5568'}
                     />
-                  </div>
+                    </div>
+                  )}
 
                   <div>
                     <label style={{
