@@ -823,7 +823,7 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
             {/* 테이블 헤더 */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '2fr 0.6fr 1.2fr 1fr 0.8fr',
+              gridTemplateColumns: isFullSeason ? '2fr 0.6fr 1.2fr' : '2fr 0.6fr 1.2fr 1fr 0.8fr',
               gap: '0.5rem',
               padding: '0.5rem 1rem',
               backgroundColor: '#000',
@@ -835,8 +835,8 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
               <div>고객정보</div>
               <div>계약번호</div>
               <div>최근 정비일</div>
-              <div>시즌케어횟수</div>
-              <div>남은횟수</div>
+              {!isFullSeason && <div>시즌케어횟수</div>}
+              {!isFullSeason && <div>남은횟수</div>}
             </div>
 
             <div style={{
@@ -855,7 +855,7 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                     borderBottom: index === currentCustomers.length - 1 ? 'none' : '1px solid #374151',
                     padding: '0.5rem 1rem',
                     display: 'grid',
-                    gridTemplateColumns: '2fr 0.6fr 1.2fr 1fr 0.8fr',
+                    gridTemplateColumns: isFullSeason ? '2fr 0.6fr 1.2fr' : '2fr 0.6fr 1.2fr 1fr 0.8fr',
                     gap: '0.5rem',
                     alignItems: 'center',
                     fontSize: '0.8rem',
@@ -911,21 +911,25 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                     </div>
                   </div>
 
-                  <div>
-                    <div style={{ color: '#3B82F6', fontWeight: '600', fontSize: '0.9rem' }}>
-                      {customer.seasonCount || '-'}
+                  {!isFullSeason && (
+                    <div>
+                      <div style={{ color: '#3B82F6', fontWeight: '600', fontSize: '0.9rem' }}>
+                        {customer.seasonCount || '-'}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <div style={{
-                      color: customer.remainingCount === 0 ? '#DC2626' : '#10B981',
-                      fontWeight: '600',
-                      fontSize: '0.9rem'
-                    }}>
-                      {customer.remainingCount !== null ? (customer.remainingCount === 0 ? '완료' : customer.remainingCount) : '-'}
+                  {!isFullSeason && (
+                    <div>
+                      <div style={{
+                        color: customer.remainingCount === 0 ? '#DC2626' : '#10B981',
+                        fontWeight: '600',
+                        fontSize: '0.9rem'
+                      }}>
+                        {customer.remainingCount !== null ? (customer.remainingCount === 0 ? '완료' : customer.remainingCount) : '-'}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1744,42 +1748,48 @@ const SeasonCare = ({ userInfo, isFullSeason = false }) => {
                     총 서비스
                   </div>
                 </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    color: selectedCustomer.seasonCount ? '#10B981' : '#9CA3AF',
-                    fontSize: '1rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {selectedCustomer.seasonCount || '-'}
+                {!isFullSeason && (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      color: selectedCustomer.seasonCount ? '#10B981' : '#9CA3AF',
+                      fontSize: '1rem',
+                      fontWeight: 'bold'
+                    }}>
+                      {selectedCustomer.seasonCount || '-'}
+                    </div>
+                    <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
+                      시즌케어횟수
+                    </div>
                   </div>
-                  <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
-                    시즌케어횟수
+                )}
+                {!isFullSeason && (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      color: selectedCustomer.remainingCount === 0 ? '#DC2626' : (selectedCustomer.remainingCount !== null ? '#F59E0B' : '#9CA3AF'),
+                      fontSize: '1rem',
+                      fontWeight: 'bold'
+                    }}>
+                      {selectedCustomer.remainingCount !== null ? (selectedCustomer.remainingCount === 0 ? '완료' : selectedCustomer.remainingCount) : '-'}
+                    </div>
+                    <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
+                      남은횟수
+                    </div>
                   </div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    color: selectedCustomer.remainingCount === 0 ? '#DC2626' : (selectedCustomer.remainingCount !== null ? '#F59E0B' : '#9CA3AF'),
-                    fontSize: '1rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {selectedCustomer.remainingCount !== null ? (selectedCustomer.remainingCount === 0 ? '완료' : selectedCustomer.remainingCount) : '-'}
+                )}
+                {!isFullSeason && (
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                      color: selectedCustomer.seasonPrice ? '#10B981' : '#9CA3AF',
+                      fontSize: '1rem',
+                      fontWeight: 'bold'
+                    }}>
+                      {selectedCustomer.seasonPrice ? `${parseInt(selectedCustomer.seasonPrice).toLocaleString()}원` : '-'}
+                    </div>
+                    <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
+                      결제금액
+                    </div>
                   </div>
-                  <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
-                    남은횟수
-                  </div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{
-                    color: selectedCustomer.seasonPrice ? '#10B981' : '#9CA3AF',
-                    fontSize: '1rem',
-                    fontWeight: 'bold'
-                  }}>
-                    {selectedCustomer.seasonPrice ? `${parseInt(selectedCustomer.seasonPrice).toLocaleString()}원` : '-'}
-                  </div>
-                  <div style={{ color: '#9CA3AF', fontSize: '0.65rem' }}>
-                    결제금액
-                  </div>
-                </div>
+                )}
                 <div style={{ textAlign: 'center' }}>
                   <div style={{
                     color: selectedCustomer.paymentStatus === 'paid' ? '#10B981' : selectedCustomer.paymentStatus === 'unpaid' ? '#DC2626' : '#9CA3AF',
