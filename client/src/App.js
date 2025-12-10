@@ -12,6 +12,8 @@ import { updatePassword } from './services/userService';
 import { getAllServices } from './services/serviceService';
 import { getSeasonCares } from './services/seasonCareService';
 import { getFullSeasonCares } from './services/fullSeasonCareService';
+import { getPromoAthletes } from './services/promoAthleteService';
+import { getCoupons } from './services/couponService';
 import logo from './assets/logo.svg';
 
 // 매출 통계 모달 컴포넌트
@@ -509,7 +511,7 @@ function App() {
   // 통합 검색 관련 state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const [allServices, setAllServices] = useState({ general: [], season: [], fullSeason: [] });
+  const [allServices, setAllServices] = useState({ general: [], season: [], fullSeason: [], promo: [], coupons: [] });
   const [selectedCustomerFilter, setSelectedCustomerFilter] = useState(null);
 
   const handleCustomerAdded = () => {
@@ -532,6 +534,10 @@ function App() {
       setActiveCategory('season');
     } else if (serviceType === '풀시즌케어') {
       setActiveCategory('fullseason');
+    } else if (serviceType === '프로모션') {
+      setActiveCategory('promo');
+    } else if (serviceType === '쿠폰') {
+      setActiveCategory('coupon');
     }
 
     // 검색창 초기화
@@ -553,6 +559,10 @@ function App() {
       setActiveCategory('season');
     } else if (serviceType === '풀시즌케어') {
       setActiveCategory('fullseason');
+    } else if (serviceType === '프로모션') {
+      setActiveCategory('promo');
+    } else if (serviceType === '쿠폰') {
+      setActiveCategory('coupon');
     }
 
     // 검색창 초기화
@@ -660,15 +670,19 @@ function App() {
   // 모든 서비스 데이터 미리 로드
   const loadAllServicesData = async () => {
     try {
-      const [generalServices, seasonCares, fullSeasonCares] = await Promise.all([
+      const [generalServices, seasonCares, fullSeasonCares, promoAthletes, coupons] = await Promise.all([
         getAllServices(),
         getSeasonCares(),
-        getFullSeasonCares()
+        getFullSeasonCares(),
+        getPromoAthletes(),
+        getCoupons()
       ]);
       setAllServices({
         general: generalServices || [],
         season: seasonCares || [],
-        fullSeason: fullSeasonCares || []
+        fullSeason: fullSeasonCares || [],
+        promo: promoAthletes || [],
+        coupons: coupons || []
       });
     } catch (error) {
       console.error('서비스 데이터 로드 실패:', error);
@@ -763,11 +777,63 @@ function App() {
       }
     });
 
+    // 프로모션 선수 검색
+    allServices.promo.forEach(promo => {
+      if (
+        promo.name?.toLowerCase().includes(query) ||
+        promo.phone?.toLowerCase().includes(query)
+      ) {
+        const normalizedName = normalizeName(promo.name);
+        const normalizedPhone = normalizePhone(promo.phone);
+        const key = `${normalizedName}_${normalizedPhone}`;
+
+        if (!customerGroups[key]) {
+          customerGroups[key] = {
+            customer_name: promo.name,
+            customer_phone: promo.phone,
+            types: new Set()
+          };
+        }
+        customerGroups[key].types.add('프로모션');
+      }
+    });
+
+    // 쿠폰 검색 (쿠폰 번호로도 검색 가능)
+    allServices.coupons.forEach(coupon => {
+      if (
+        coupon.customer_name?.toLowerCase().includes(query) ||
+        coupon.customer_phone?.toLowerCase().includes(query) ||
+        coupon.coupon_number?.toLowerCase().includes(query)
+      ) {
+        const normalizedName = normalizeName(coupon.customer_name);
+        const normalizedPhone = normalizePhone(coupon.customer_phone);
+        const key = `${normalizedName}_${normalizedPhone}`;
+
+        if (!customerGroups[key]) {
+          customerGroups[key] = {
+            customer_name: coupon.customer_name,
+            customer_phone: coupon.customer_phone,
+            types: new Set(),
+            coupon_number: coupon.coupon_number
+          };
+        }
+        customerGroups[key].types.add('쿠폰');
+        // 쿠폰 번호 저장 (여러 쿠폰이 있을 수 있으므로)
+        if (!customerGroups[key].coupon_numbers) {
+          customerGroups[key].coupon_numbers = [];
+        }
+        if (coupon.coupon_number && !customerGroups[key].coupon_numbers.includes(coupon.coupon_number)) {
+          customerGroups[key].coupon_numbers.push(coupon.coupon_number);
+        }
+      }
+    });
+
     // 결과 변환
     const results = Object.values(customerGroups).map(group => ({
       customer_name: group.customer_name,
       customer_phone: group.customer_phone,
-      types: Array.from(group.types)
+      types: Array.from(group.types),
+      coupon_numbers: group.coupon_numbers || []
     }));
 
     setSearchResults(results);
@@ -1318,7 +1384,7 @@ function App() {
               marginBottom: '2rem'
             }}>
               <h3 style={{ color: '#fff', fontSize: '1.125rem', fontWeight: '600', margin: '0 0 1rem' }}>
-                🔍 고객 검색 (실시간)
+                🔍 다 찾기
               </h3>
               <div style={{ marginBottom: searchResults.length > 0 ? '1.5rem' : '0' }}>
                 <input
@@ -1358,14 +1424,14 @@ function App() {
                           transition: 'all 0.2s'
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                           <span style={{ color: '#fff', fontSize: '0.95rem', fontWeight: '600', minWidth: '60px' }}>
                             {result.customer_name}
                           </span>
                           <span style={{ color: '#9CA3AF', fontSize: '0.85rem', minWidth: '110px' }}>
                             {result.customer_phone}
                           </span>
-                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
                             {result.types.map((type, typeIndex) => (
                               <span
                                 key={typeIndex}
@@ -1375,7 +1441,9 @@ function App() {
                                   backgroundColor:
                                     type === '일반정비' ? '#10B981' :
                                     type === '시즌케어' ? '#3B82F6' :
-                                    '#F59E0B',
+                                    type === '풀시즌케어' ? '#F59E0B' :
+                                    type === '프로모션' ? '#8B5CF6' :
+                                    '#EC4899',
                                   color: '#fff',
                                   padding: '3px 8px',
                                   borderRadius: '4px',
@@ -1398,6 +1466,11 @@ function App() {
                                 {type}
                               </span>
                             ))}
+                            {result.coupon_numbers && result.coupon_numbers.length > 0 && (
+                              <span style={{ color: '#EC4899', fontSize: '0.7rem', fontWeight: '500' }}>
+                                #{result.coupon_numbers.join(', #')}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
