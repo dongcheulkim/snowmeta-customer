@@ -448,13 +448,14 @@ const SeasonCare = ({ userInfo, isFullSeason = false, selectedCustomerFilter }) 
       const getFunction = isFullSeason ? getFullSeasonCares : getSeasonCares;
 
       if (isFullSeason) {
-        // 풀시즌케어: 모든 서비스의 고객 정보만 업데이트
+        // 풀시즌케어: 모든 서비스의 고객 정보 및 결제 현황 업데이트
         for (const service of customerEditData.services) {
           await updateFunction(service.id, {
             ...service,
             customer_name: customerEditData.customer_name,
             customer_phone: customerEditData.customer_phone,
-            customer_memo: customerEditData.customer_memo
+            customer_memo: customerEditData.customer_memo,
+            payment_status: customerEditData.paymentStatus
           });
         }
       } else {
@@ -2352,39 +2353,6 @@ const SeasonCare = ({ userInfo, isFullSeason = false, selectedCustomerFilter }) 
                         fontWeight: '600',
                         display: 'block',
                         marginBottom: '6px'
-                      }}>결제현황</label>
-                      <select
-                        value={customerEditData.paymentStatus || ''}
-                        onChange={(e) => {
-                          setCustomerEditData({
-                            ...customerEditData,
-                            paymentStatus: e.target.value
-                          });
-                        }}
-                        style={{
-                          width: '100%',
-                          padding: '10px',
-                          backgroundColor: '#2D3748',
-                          border: '2px solid #4A5568',
-                          borderRadius: '8px',
-                          color: '#fff',
-                          fontSize: '13px',
-                          boxSizing: 'border-box'
-                        }}
-                      >
-                        <option value="">선택하세요</option>
-                        <option value="paid">결제완료</option>
-                        <option value="unpaid">미결제</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label style={{
-                        color: '#E5E7EB',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        display: 'block',
-                        marginBottom: '6px'
                       }}>결제지점</label>
                       <select
                         value={customerEditData.paymentLocation || ''}
@@ -2413,6 +2381,39 @@ const SeasonCare = ({ userInfo, isFullSeason = false, selectedCustomerFilter }) 
                     </div>
                   </>
                 )}
+
+                <div>
+                  <label style={{
+                    color: '#E5E7EB',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    display: 'block',
+                    marginBottom: '6px'
+                  }}>결제현황</label>
+                  <select
+                    value={customerEditData.paymentStatus || ''}
+                    onChange={(e) => {
+                      setCustomerEditData({
+                        ...customerEditData,
+                        paymentStatus: e.target.value
+                      });
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      backgroundColor: '#2D3748',
+                      border: '2px solid #4A5568',
+                      borderRadius: '8px',
+                      color: '#fff',
+                      fontSize: '13px',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="">선택하세요</option>
+                    <option value="paid">결제완료</option>
+                    <option value="unpaid">미결제</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{
