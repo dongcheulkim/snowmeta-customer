@@ -715,7 +715,8 @@ function App() {
     allServices.general.forEach(service => {
       if (
         service.customer_name?.toLowerCase().includes(query) ||
-        service.customer_phone?.toLowerCase().includes(query)
+        service.customer_phone?.toLowerCase().includes(query) ||
+        service.customer_memo?.toLowerCase().includes(query)
       ) {
         // 정규화된 이름과 전화번호로 고유 키 생성
         const normalizedName = normalizeName(service.customer_name);
@@ -737,7 +738,8 @@ function App() {
     allServices.season.forEach(service => {
       if (
         service.customer_name?.toLowerCase().includes(query) ||
-        service.customer_phone?.toLowerCase().includes(query)
+        service.customer_phone?.toLowerCase().includes(query) ||
+        service.customer_memo?.toLowerCase().includes(query)
       ) {
         // 정규화된 이름과 전화번호로 고유 키 생성
         const normalizedName = normalizeName(service.customer_name);
@@ -759,7 +761,8 @@ function App() {
     allServices.fullSeason.forEach(service => {
       if (
         service.customer_name?.toLowerCase().includes(query) ||
-        service.customer_phone?.toLowerCase().includes(query)
+        service.customer_phone?.toLowerCase().includes(query) ||
+        service.customer_memo?.toLowerCase().includes(query)
       ) {
         // 정규화된 이름과 전화번호로 고유 키 생성
         const normalizedName = normalizeName(service.customer_name);
