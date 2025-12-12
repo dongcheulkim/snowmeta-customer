@@ -444,45 +444,61 @@ const SeasonCare = ({ userInfo, isFullSeason = false, selectedCustomerFilter }) 
       const oldCustomerName = selectedCustomer.customer_name;
       const oldCustomerPhone = selectedCustomer.customer_phone;
 
-      // 해당 고객의 첫 번째 서비스(시즌케어 정보가 있는 것) 찾기
-      const firstService = customerEditData.services.find(s => s.season_count);
+      const updateFunction = isFullSeason ? updateFullSeasonCare : updateSeasonCare;
+      const getFunction = isFullSeason ? getFullSeasonCares : getSeasonCares;
 
-      if (firstService) {
-        // 첫 번째 서비스만 시즌케어 정보 업데이트
-        await updateSeasonCare(firstService.id, {
-          ...firstService,
-          customer_name: customerEditData.customer_name,
-          customer_phone: customerEditData.customer_phone,
-          customer_memo: customerEditData.customer_memo,
-          season_count: customerEditData.seasonCount,
-          total_cost: customerEditData.seasonPrice,
-          payment_status: customerEditData.paymentStatus,
-          payment_location: customerEditData.paymentLocation
-        });
-      }
-
-      // 나머지 서비스들은 고객 정보만 업데이트
-      for (const service of customerEditData.services) {
-        if (service.id !== firstService?.id) {
-          await updateSeasonCare(service.id, {
+      if (isFullSeason) {
+        // 풀시즌케어: 모든 서비스의 고객 정보만 업데이트
+        for (const service of customerEditData.services) {
+          await updateFunction(service.id, {
             ...service,
             customer_name: customerEditData.customer_name,
             customer_phone: customerEditData.customer_phone,
             customer_memo: customerEditData.customer_memo
           });
         }
+      } else {
+        // 시즌케어: 첫 번째 서비스는 시즌케어 정보 포함 업데이트
+        const firstService = customerEditData.services.find(s => s.season_count);
+
+        if (firstService) {
+          // 첫 번째 서비스만 시즌케어 정보 업데이트
+          await updateFunction(firstService.id, {
+            ...firstService,
+            customer_name: customerEditData.customer_name,
+            customer_phone: customerEditData.customer_phone,
+            customer_memo: customerEditData.customer_memo,
+            season_count: customerEditData.seasonCount,
+            total_cost: customerEditData.seasonPrice,
+            payment_status: customerEditData.paymentStatus,
+            payment_location: customerEditData.paymentLocation
+          });
+        }
+
+        // 나머지 서비스들은 고객 정보만 업데이트
+        for (const service of customerEditData.services) {
+          if (service.id !== firstService?.id) {
+            await updateFunction(service.id, {
+              ...service,
+              customer_name: customerEditData.customer_name,
+              customer_phone: customerEditData.customer_phone,
+              customer_memo: customerEditData.customer_memo
+            });
+          }
+        }
       }
+
       setShowCustomerEditModal(false);
       setCustomerEditData(null);
 
       // 최신 데이터로 상세 팝업 업데이트
-      const updatedList = await getSeasonCares();
+      const updatedList = await getFunction();
       const contracts = groupByContract(updatedList);
 
       // 현재 선택된 계약 찾기 (contractId 또는 전화번호로 찾기)
       const updatedContract = contracts.find(c =>
-        c.contractId === selectedCustomer.contractId ||
-        c.customer_phone === selectedCustomer.customer_phone
+        (isFullSeason ? true : c.contractId === selectedCustomer.contractId) &&
+        c.customer_phone === customerEditData.customer_phone
       );
       if (updatedContract) {
         setSelectedCustomer(updatedContract);
@@ -2264,135 +2280,139 @@ const SeasonCare = ({ userInfo, isFullSeason = false, selectedCustomerFilter }) 
                   />
                 </div>
 
-                <div>
-                  <label style={{
-                    color: '#E5E7EB',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '6px'
-                  }}>시즌케어 횟수</label>
-                  <select
-                    value={customerEditData.seasonCount || ''}
-                    onChange={(e) => {
-                      const selectedValue = e.target.value;
-                      let price = customerEditData.seasonPrice;
-                      if (selectedValue === '5+왁') {
-                        price = '375000';
-                      } else if (selectedValue === '10+1') {
-                        price = '750000';
-                      }
-                      setCustomerEditData({...customerEditData, seasonCount: selectedValue, seasonPrice: price});
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      backgroundColor: '#2D3748',
-                      border: '2px solid #4A5568',
-                      borderRadius: '8px',
-                      color: '#fff',
-                      fontSize: '13px',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="">선택하세요</option>
-                    <option value="5+왁">5+왁</option>
-                    <option value="10+1">10+1</option>
-                  </select>
-                </div>
+                {!isFullSeason && (
+                  <>
+                    <div>
+                      <label style={{
+                        color: '#E5E7EB',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        display: 'block',
+                        marginBottom: '6px'
+                      }}>시즌케어 횟수</label>
+                      <select
+                        value={customerEditData.seasonCount || ''}
+                        onChange={(e) => {
+                          const selectedValue = e.target.value;
+                          let price = customerEditData.seasonPrice;
+                          if (selectedValue === '5+왁') {
+                            price = '375000';
+                          } else if (selectedValue === '10+1') {
+                            price = '750000';
+                          }
+                          setCustomerEditData({...customerEditData, seasonCount: selectedValue, seasonPrice: price});
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: '#2D3748',
+                          border: '2px solid #4A5568',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <option value="">선택하세요</option>
+                        <option value="5+왁">5+왁</option>
+                        <option value="10+1">10+1</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label style={{
-                    color: '#E5E7EB',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '6px'
-                  }}>결제금액</label>
-                  <input
-                    type="number"
-                    value={customerEditData.seasonPrice || ''}
-                    onChange={(e) => setCustomerEditData({...customerEditData, seasonPrice: e.target.value})}
-                    placeholder="금액 입력"
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      backgroundColor: '#2D3748',
-                      border: '2px solid #4A5568',
-                      borderRadius: '8px',
-                      color: '#fff',
-                      fontSize: '13px',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
+                    <div>
+                      <label style={{
+                        color: '#E5E7EB',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        display: 'block',
+                        marginBottom: '6px'
+                      }}>결제금액</label>
+                      <input
+                        type="number"
+                        value={customerEditData.seasonPrice || ''}
+                        onChange={(e) => setCustomerEditData({...customerEditData, seasonPrice: e.target.value})}
+                        placeholder="금액 입력"
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: '#2D3748',
+                          border: '2px solid #4A5568',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
 
-                <div>
-                  <label style={{
-                    color: '#E5E7EB',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '6px'
-                  }}>결제현황</label>
-                  <select
-                    value={customerEditData.paymentStatus || ''}
-                    onChange={(e) => {
-                      setCustomerEditData({
-                        ...customerEditData,
-                        paymentStatus: e.target.value
-                      });
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      backgroundColor: '#2D3748',
-                      border: '2px solid #4A5568',
-                      borderRadius: '8px',
-                      color: '#fff',
-                      fontSize: '13px',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="">선택하세요</option>
-                    <option value="paid">결제완료</option>
-                    <option value="unpaid">미결제</option>
-                  </select>
-                </div>
+                    <div>
+                      <label style={{
+                        color: '#E5E7EB',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        display: 'block',
+                        marginBottom: '6px'
+                      }}>결제현황</label>
+                      <select
+                        value={customerEditData.paymentStatus || ''}
+                        onChange={(e) => {
+                          setCustomerEditData({
+                            ...customerEditData,
+                            paymentStatus: e.target.value
+                          });
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: '#2D3748',
+                          border: '2px solid #4A5568',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <option value="">선택하세요</option>
+                        <option value="paid">결제완료</option>
+                        <option value="unpaid">미결제</option>
+                      </select>
+                    </div>
 
-                <div>
-                  <label style={{
-                    color: '#E5E7EB',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    display: 'block',
-                    marginBottom: '6px'
-                  }}>결제지점</label>
-                  <select
-                    value={customerEditData.paymentLocation || ''}
-                    onChange={(e) => {
-                      setCustomerEditData({
-                        ...customerEditData,
-                        paymentLocation: e.target.value
-                      });
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '10px',
-                      backgroundColor: '#2D3748',
-                      border: '2px solid #4A5568',
-                      borderRadius: '8px',
-                      color: '#fff',
-                      fontSize: '13px',
-                      boxSizing: 'border-box'
-                    }}
-                  >
-                    <option value="">선택하세요</option>
-                    <option value="곤지암">곤지암</option>
-                    <option value="대관령">대관령</option>
-                    <option value="비발디">비발디</option>
-                  </select>
-                </div>
+                    <div>
+                      <label style={{
+                        color: '#E5E7EB',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        display: 'block',
+                        marginBottom: '6px'
+                      }}>결제지점</label>
+                      <select
+                        value={customerEditData.paymentLocation || ''}
+                        onChange={(e) => {
+                          setCustomerEditData({
+                            ...customerEditData,
+                            paymentLocation: e.target.value
+                          });
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: '#2D3748',
+                          border: '2px solid #4A5568',
+                          borderRadius: '8px',
+                          color: '#fff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box'
+                        }}
+                      >
+                        <option value="">선택하세요</option>
+                        <option value="곤지암">곤지암</option>
+                        <option value="대관령">대관령</option>
+                        <option value="비발디">비발디</option>
+                      </select>
+                    </div>
+                  </>
+                )}
               </div>
 
               <div style={{
